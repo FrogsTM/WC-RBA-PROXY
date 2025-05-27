@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Bonus Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input[type="number"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .calculate-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        .calculate-button:hover {
+            background-color: #0056b3;
+        }
+        .results-group {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .results-group h2 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-item span:first-child {
+            font-weight: bold;
+        }
+        .total-bonus {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Monthly Bonus Calculator</h1>
+
+        <div class="input-group">
+            <label for="actualHPD">Actual HPD:</label>
+            <input type="number" id="actualHPD" placeholder="e.g., 8.5">
+        </div>
+
+        <div class="input-group">
+            <label for="totalNetSales">Total Team Net Sales ($):</label>
+            <input type="number" id="totalNetSales" placeholder="e.g., 750000">
+        </div>
+
+        <button class="calculate-button" onclick="calculateBonus()">Calculate Bonus</button>
+
+        <div class="results-group" id="resultsGroup" style="display: none;">
+            <h2>Bonus Calculation Results</h2>
+            <div class="result-item">
+                <span>HPD Bonus:</span>
+                <span id="hpdBonusResult">$0.00</span>
+            </div>
+            <div class="result-item">
+                <span>Base Net Sales Bonus:</span>
+                <span id="baseSalesBonusResult">$0.00</span>
+            </div>
+            <div class="result-item">
+                <span>Sales Accelerator Bonus:</span>
+                <span id="acceleratorBonusResult">$0.00</span>
+            </div>
+            <div class="result-item">
+                <span>Total Net Sales Bonus:</span>
+                <span id="totalSalesBonusResult">$0.00</span>
+            </div>
+            <div class="result-item total-bonus">
+                <span>TOTAL MONTHLY BONUS:</span>
+                <span id="totalMonthlyBonusResult">$0.00</span>
+            </div>
+        </div>
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+    </div>
+
+    <script>
+        function formatCurrency(value) {
+            return '$' + value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+
+        function calculateHpdBonus(actualHPD) {
+            if (actualHPD <= 6) {
+                return 4000.0;
+            } else if (actualHPD >= 14) {
+                return 0.0;
+            } else {
+                // Formula: 4000 - (((Actual_HPD - 6) / 8) * 4000)
+                const hpdBonus = 4000.0 - (((actualHPD - 6.0) / 8.0) * 4000.0);
+                return parseFloat(hpdBonus.toFixed(2));
+            }
+        }
+
+        function calculateBaseNetSalesBonus(totalNetSales) {
+            if (totalNetSales <= 400000.0) {
+                return 0.0;
+            } else if (totalNetSales >= 800000.0) {
+                return 4000.0;
+            } else {
+                // Formula: ((Total Team Net Sales - 400000) / 400000) * 4000
+                const baseSalesBonus = ((totalNetSales - 400000.0) / 400000.0) * 4000.0;
+                return parseFloat(baseSalesBonus.toFixed(2));
+            }
+        }
+
+        function calculateSalesAcceleratorBonus(totalNetSales) {
+            if (totalNetSales > 800000.0) {
+                // Accelerator is 0.25% of sales over $800,000
+                // Formula: (Total Team Net Sales - 800000) * 0.0025
+                const acceleratorBonus = (totalNetSales - 800000.0) * 0.0025;
+                return parseFloat(acceleratorBonus.toFixed(2));
+            } else {
+                return 0.0;
+            }
+        }
+
+        function calculateBonus() {
+            const errorMessageDiv = document.getElementById('errorMessage');
+            const resultsGroupDiv = document.getElementById('resultsGroup');
+            errorMessageDiv.style.display = 'none'; // Hide error message initially
+            errorMessageDiv.textContent = '';
+
+            const actualHPDInput = document.getElementById('actualHPD').value;
+            const totalNetSalesInput = document.getElementById('totalNetSales').value;
+
+            if (actualHPDInput === '' || totalNetSalesInput === '') {
+                errorMessageDiv.textContent = 'Please enter values for both HPD and Net Sales.';
+                errorMessageDiv.style.display = 'block';
+                resultsGroupDiv.style.display = 'none';
+                return;
+            }
+
+            const actualHPD = parseFloat(actualHPDInput);
+            const totalNetSales = parseFloat(totalNetSalesInput);
+
+            if (isNaN(actualHPD) || isNaN(totalNetSales)) {
+                errorMessageDiv.textContent = 'Invalid input. Please enter numbers only.';
+                errorMessageDiv.style.display = 'block';
+                resultsGroupDiv.style.display = 'none';
+                return;
+            }
+             if (actualHPD < 0 || totalNetSales < 0) {
+                errorMessageDiv.textContent = 'Inputs cannot be negative.';
+                errorMessageDiv.style.display = 'block';
+                resultsGroupDiv.style.display = 'none';
+                return;
+            }
+
+
+            const hpdBonus = calculateHpdBonus(actualHPD);
+            const baseSalesBonus = calculateBaseNetSalesBonus(totalNetSales);
+            const acceleratorBonus = calculateSalesAcceleratorBonus(totalNetSales);
+            const totalSalesBonus = baseSalesBonus + acceleratorBonus;
+            const totalMonthlyBonus = hpdBonus + totalSalesBonus;
+
+            document.getElementById('hpdBonusResult').textContent = formatCurrency(hpdBonus);
+            document.getElementById('baseSalesBonusResult').textContent = formatCurrency(baseSalesBonus);
+            document.getElementById('acceleratorBonusResult').textContent = formatCurrency(acceleratorBonus);
+            document.getElementById('totalSalesBonusResult').textContent = formatCurrency(totalSalesBonus);
+            document.getElementById('totalMonthlyBonusResult').textContent = formatCurrency(totalMonthlyBonus);
+            
+            resultsGroupDiv.style.display = 'block'; // Show results
+        }
+    </script>
+</body>
+</html>
